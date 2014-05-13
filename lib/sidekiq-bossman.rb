@@ -45,8 +45,14 @@ module Sidekiq
       system start_cmd
     end
 
-    def stop_workers
-      system "if [ -f #{@pidfile} ]; then bundle exec sidekiqctl stop #{@pidfile}; fi"
+    def stop_workers(detach = false)
+      command = "if [ -f #{@pidfile} ]; then bundle exec sidekiqctl stop #{@pidfile}; fi"
+      
+      if detach 
+        Process.fork { system command }
+      else
+        system command
+      end
     end
 
   end
