@@ -33,7 +33,7 @@ module Sidekiq
     ##
     # Starts the workers as a daemon with either the default or given
     # options hash in the initializer
-    def start_workers
+    def start_workers(detach = false)
       start_cmd = "nohup bundle exec sidekiq -e #{@environment} -t #{@timeout} -P #{@pidfile}"
       start_cmd << " -v" if @verbose == true
       start_cmd << " -r #{@require}" unless @require.nil?
@@ -42,16 +42,33 @@ module Sidekiq
       @queues.each { |queue| start_cmd << " -q #{queue}" }
       start_cmd << " -c #{@concurrency}" unless @concurrency.nil?
       start_cmd << " >> #{@logfile} 2>&1 &"
-      system start_cmd
+      
+      if detach
+        Process.fork { system start_cmd }
+      else
+        system start_cmd
+      end
     end
 
     def stop_workers(detach = false)
-      command = "if [ -f #{@pidfile} ]; then bundle exec sidekiqctl stop #{@pidfile}; fi"
+      stop_cmd = "if [ -f #{@pidfile} ]; then bundle exec sidekiqctl stop #{@pidfile}; fi"
       
       if detach 
-        Process.fork { system command }
+        Process.fork { system stop_cmd }
       else
-        system command
+        system stop_cmd
+      end
+    end
+    
+    def restart_workers(detach)
+      if detach
+        Process.fork do 
+          stop_workers
+          start_workers
+        end
+      else
+        stop_workers
+        start_workers
       end
     end
 
