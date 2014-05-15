@@ -55,7 +55,7 @@ module Sidekiq
       stop_cmd = "if [ -f #{@pidfile} ]; then bundle exec sidekiqctl stop #{@pidfile}; fi"
       
       command_block = lambda {
-        system stop_cmd 
+        output = system stop_cmd 
         Sidekiq.logger.info output
         Sidekiq.logger.info 'Shutting down Sidekiq done.'
       }
