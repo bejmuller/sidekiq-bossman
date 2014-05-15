@@ -61,7 +61,9 @@ module Sidekiq
       }
       
       if detach 
-        Process.fork command_block
+        Process.fork {
+          command_block.call
+        }
       else
         command_block.call
       end
