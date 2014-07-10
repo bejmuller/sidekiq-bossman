@@ -61,7 +61,7 @@ module Sidekiq
       }
       
       if detach 
-        Process.fork {
+        ::Process.fork {
           command_block.call
         }
       else
@@ -71,7 +71,7 @@ module Sidekiq
     
     def restart_workers(detach)
       if detach
-        Process.fork do 
+        ::Process.fork do 
           stop_workers
           start_workers
         end
